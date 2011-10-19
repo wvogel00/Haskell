@@ -4,7 +4,7 @@ import System.IO
 import Types
 import LoadParse
 
-datanum :: Int --何行にわたってデータが保存されているか
+datanum :: Int -- how many line is used to save the single data
 datanum = 3
 
 save :: Date -> FLine -> ScreenState -> Music -> IO()

@@ -2,8 +2,9 @@ import Data.Array
 
 type ArrayI = Array Int Int
 type ArrayII = Array Int ArrayI
-makeData :: String -> (Int,Int)
-makeData = (\[a,b] -> (a,b)).map read.take 2.words
+
+makeRange :: String -> (Int,Int)
+makeRange = (\[a,b] -> (a,b)).map read.take 2.words
 
 makeArray :: (Int,Int) -> IO ArrayII
 makeArray (h,w) = do cs <- getContents
@@ -20,6 +21,6 @@ seeValue :: Int -> Int -> ArrayII -> Int
 seeValue h' w' mapData = (mapData ! h') ! w'
 
 main = do hw <- getLine
-          mapData <- makeArray.makeData $ hw
+          mapData <- makeArray.makeRange $ hw
           print mapData
           print $ seeValue 2 3 mapData

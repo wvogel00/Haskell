@@ -2,14 +2,33 @@ import Graphics.UI.WX
 import Menu
 
 main :: IO()
-main = start hello
+main = start gui
 
-hello :: IO()
-hello = do f <- frame [text := "test GUI with Haskell"]
-           quit <- button f [text := "＜" ,on command := close f]
-           btn2 <- button f [text := "＞" ,on command := close f]
-           m <- myMenu
-           set f m
-           set f [ layout := widget quit
-                  ,layout := widget btn2
-                  ,clientSize := Size 600 400]
+gui :: IO()
+gui = do
+ f <- frame [text := "HaskellでグイっとGUI"]
+ m <- myMenu
+ p <- panel f []
+
+ --戻るボタン
+ btn1 <- button p [ text := "＜"
+                         ,on command := return ()]
+
+ --進むボタン
+ btn2 <- button p [ text := "＞"
+                  ,on command := return ()]
+
+ --テキスト表示画面
+ showContents <- textCtrl p [enabled := False,wrap := WrapNone]
+
+
+ --GUIパーツ配置
+ set f m
+ set f[ layout := container p $ column 0
+          [ (margin 2 $ row 2
+              [ widget btn1
+               ,widget btn2])
+           , minsize (sz 200 400) $ widget showContents ]
+           ,clientSize := Size 600 400]
+
+

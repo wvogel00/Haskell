@@ -1,23 +1,11 @@
 module Calender where
 
 import Data.Maybe
+import Interface
 
 --曜日
 data DayOfWeek = Sun | Mon | Tue | Wed | Thu | Fri | Sat
                                      deriving (Eq,Enum,Show)
-
-type Year   = Int
-type Month  = Int
-type Day    = Int
-
-type Date   = (Year , Month , Day)
-
-type Hour   = Int
-type Minute = Int
-
-type Time   = (Hour,Minute)
-type TimeSchedule = (Time,Time)
-type Schedule = (TimeSchedule,String)
 
 months :: [Month]
 months = [1..12]

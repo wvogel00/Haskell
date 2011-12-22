@@ -13,5 +13,14 @@ type Span = (Time,Time)
 type Plan = (Span,String)
 type Schedule = [Span]
 
+width  :: Int
 width  = 800
+
+height :: Int
 height = 600
+
+--列数
+calenderRow = 7
+
+--行数
+calenderLine = 5

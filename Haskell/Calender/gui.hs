@@ -6,7 +6,7 @@ import CalenderGUI
 
 main :: IO()
 main = start gui
-
+          
 gui :: IO()
 gui = do
   f <- frame [text := "HaskellでグイっとGUI"]
@@ -18,9 +18,10 @@ gui = do
                     ,on command := addSchedule (2011,12,21)]
   --進むボタン
   btn2 <- button p [ text := "＞"
-                    ,on command := return ()]
+                    ,on command := test p "2012/01/07"]
   --テキスト表示画面
   showContents <- textCtrl p [enabled := False,wrap := WrapNone]
+
   calender <- calenderBlock (2011,12) p
   --GUIパーツ配置
   set f m
@@ -35,3 +36,9 @@ gui = do
 
 -------------------------------------------------------
 -------------------------------------------------------
+test :: Window a -> String -> IO ()
+test w dateStr = saveSchedule w =<<  textDialog w "予定" dateStr ""
+
+saveSchedule :: Window a -> String -> IO()
+saveSchedule _ "" = return ()
+saveSchedule w str = warningDialog w str str

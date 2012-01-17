@@ -44,7 +44,7 @@ scString ::: String
  = '\"' scChar* '\"'
 
 scChar :: Char
- = [0-9a-zA-Z .,_!?]
+ = [0-9a-zA-Z .,'_!?]
 
 num ::: Int
  = [1-9] [0-9]* {read ($1 : $2)}

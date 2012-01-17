@@ -1,0 +1,11 @@
+music("HaskellCafe.mp3","on");
+
+img("background.png");
+
+img(1,300,50,"A.png");
+img(2,100,0,"B.png");
+
+mes("In cafe , two young men having lunch");
+mes("A","I am tired.");
+mes("B","Oh.Why?");
+mes("A","I don't know, perhaps, it is because I haven't eat anything for a week");

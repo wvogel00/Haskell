@@ -60,10 +60,11 @@ img2Scr a      = Img {layer = 0,x = 0,y = 0,filepath = a}
 
 soundScr a b = Sound {filepath = a , isOn = b}
 
-format e = "line="++show (locLine e) ++ ",pos" ++show (locAbs e)
+format e = "line="++show (locLine e)
 
 main = do 
  cs <- getContents
  case parseString scripts "<script>" cs of
   Right xs -> forM_ xs print
-  Left (ParseError (LocPos e) comment) -> putStrLn $ format e ++ "\n\r"++comment
+  Left (ParseError (LocPos e) comment)
+           -> putStrLn $ format e ++ "\n\r"++comment

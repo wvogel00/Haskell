@@ -1,1 +1,8 @@
-I this folder, I put projects written in Haskell.
+In this folder, I put projects written in Haskell.
+
+ノベルゲームエンジンの製作のために、
+OpenGLの使用を決定。
+PeggyやParsecでパーサを構成。
+しかし、肝心のGUI側が、
+そのままでは画像表示も日本語表示も扱えないので、
+それを解決するためのモジュールをちまちまと作成中。

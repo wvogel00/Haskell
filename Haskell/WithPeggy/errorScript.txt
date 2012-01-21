@@ -1,0 +1,4 @@
+mes("A","Oh,it is delicious!");
+mes("B","What are you eating?");
+img(3,200,100,,"imokenpi.png");
+mes("A","imokenpi!!");

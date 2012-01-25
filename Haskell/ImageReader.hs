@@ -6,6 +6,7 @@ import Data.Binary
 import Data.Binary.Get
 import Data.ByteString.Lazy as L (readFile)
 import Control.Monad (foldM)
+import Control.Applicative
 
 type RGBA = Color4 GLfloat
 type RGB  = Color3 GLfloat
@@ -53,12 +54,15 @@ toGLfloat :: Word8 -> GLfloat
 toGLfloat = (/255).read.show
 
 --1画素を読む
-readColor3 :: Get (Color3 GLfloat)
-readColor3 = do
+readColor3 :: Int -> Get [Color3 GLfloat]
+readColor3 0 = return []
+readColor3 n = do
  b <- getWord8
  g <- getWord8
  r <- getWord8
- return (Color3 (toGLfloat r) (toGLfloat g) (toGLfloat b))
+ let x = [Color3 (toGLfloat r) (toGLfloat g) (toGLfloat b)]
+ xs <- ((x++)<$>readColor3 (n-24))
+ return xs
 
 --読み込んだ画素情報のリストを返す
 readBmp :: String -> IO [RGB]
@@ -77,6 +81,6 @@ bmpImageList :: Get [RGB]
 bmpImageList = do
  f <- readBmpFileHeader
  i <- readBmpInfoHeader
- list <- map
- --xs <- readColor3
- --return [xs]
+ xs <- readColor3 (read.show $ biSizeImage i)
+ return (f,i)
+ return xs

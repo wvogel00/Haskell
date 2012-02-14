@@ -1,58 +1,45 @@
-import Data.IORef
-import Control.Monad(filterM)
---filterM :: Monad m => (a->m Bool) -> [a] -> m [a]
+import Control.Monad.State
 
 type Pos = Int
 type Counter = Int
+type NotVisited = [Pos]
+type VisitState = ((Pos,NotVisited),Counter)
 
-n,m :: Pos
 n = 10
 m = 12
 
-mapData :: [[Char]]
+mapData :: [Char]
 mapData
- = ["W........WW.",
-    ".WWW.....WWW",
-    "....WW...WW.",
-    ".........WW.",
-    ".........W..",
-    "..W......W..",
-    ".W.W.....WW.",
-    "W.W.W.....W.",
-    ".W.W......W.",
-    "..W.......W."
-   ]
+ = concat ["W........WW.",
+           ".WWW.....WWW",
+           "....WW...WW.",
+           ".........WW.",
+           ".........W..",
+           "..W......W..",
+           ".W.W.....WW.",
+           "W.W.W.....W.",
+           ".W.W......W.",
+           "..W.......W."
+          ]
 
-visitedPos = []
+search :: [Char] -> State VisitState Counter
+search [] = do
+ (_,counter) <- get
+ return counter
+search (x:xs) = do
+ ((p,visited),counter) <- get
+ case x of
+  '.' -> put ((p+1,p:visited),counter)
+  'W' -> 
 
---update :: Pos -> IORef [Pos]
-update p = do
- r <- newIORef p
- return =<< writeIORef r (p:visitedPos)
- 
+ search xs
 
-search :: [Char] -> IO Counter
-search xs =  (filterM (visit xs)) [0..n*m] >>= return
+--既に探索済みの座標は調べる必要がないので、4点のみ調べれば良い
+nearPos :: Pos -> [Pos]
+nearPos p = filter (<n*m) [p + 1,p+m-1,p+m,p+m+1]
 
---訪問済みの場合は無視(false)
---未法文の場合のみ、処理を行う
-visit :: [Char] -> Pos -> IO Bool
-visit xs p
- = if any (==p) visitedPos
-    then return False
-    else do case length $ filter f (near8) of
-             0 -> do update p
-                     return True
-             _ -> return True
-  where
-    f k = xs!!k =='W'
-
---座標の8近傍点を返す
-near8 :: Pos -> [Pos]
-near8 p = filter ((>=0) && (<n*m))
-            [p-m-1,p-m,p-m+1,
-             p - 1  ,  p + 1,
-             p+m-1,p+m,p+m-1]
+start :: VisitState
+start = ((0,0),0)
 
 main :: IO()
-main = print =<< search $ concat mapData
+main = evalState (search [0..m*n]) start

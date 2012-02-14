@@ -2,10 +2,6 @@ import Control.Monad
 import Data.IORef
 import Data.Foldable(foldlM)
 
-type Counter = Int
-type Pos = (Int,Int)
-type Visited = [Pos]
-
 (n,m) = (10,12)
 
 field = ["W........WW."
@@ -25,7 +21,6 @@ value (x,y) = (field !! x) !! y
 inField (x,y)
  = 0<=x && x<n && 0<=y && y<m
 
-dfs :: Pos -> IORef Visited -> IO ()
 dfs p visitedRef = do
  modifyIORef visitedRef (p:)
  forM_ (near4pos p) $ \p' ->

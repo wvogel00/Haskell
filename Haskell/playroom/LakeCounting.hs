@@ -13,7 +13,7 @@ m = 12
 field = ["W........WW."
         ,".WWW.....WWW"
         ,"....WW...WW."
-        ,".W.......WW."
+        ,".........WW."
         ,".........W.."
         ,"..W......W.."
         ,".W.W.....WW."
@@ -27,7 +27,7 @@ value (x,y) = (field !! x) !! y
 inField (x,y)
  = 0<=x && x<n && 0<=y && y<m
 
-dfs :: Pos -> IORef [Pos] -> IO ()
+dfs :: Pos -> Visited -> IO ()
 dfs p visitedRef = do
  modifyIORef visitedRef (p:) 
  visited <- readIORef visitedRef

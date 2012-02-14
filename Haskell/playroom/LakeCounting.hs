@@ -1,45 +1,58 @@
-import Control.Monad.State
+import Data.List
+import Control.Monad
+import Data.IORef
+import Data.Foldable(foldlM)
 
-type Pos = Int
 type Counter = Int
-type NotVisited = [Pos]
-type VisitState = ((Pos,NotVisited),Counter)
+type Pos = (Int,Int)
+type Visited = IORef [Pos]
 
 n = 10
 m = 12
 
-mapData :: [Char]
-mapData
- = concat ["W........WW.",
-           ".WWW.....WWW",
-           "....WW...WW.",
-           ".........WW.",
-           ".........W..",
-           "..W......W..",
-           ".W.W.....WW.",
-           "W.W.W.....W.",
-           ".W.W......W.",
-           "..W.......W."
-          ]
+field = ["W........WW."
+        ,".WWW.....WWW"
+        ,"....WW...WW."
+        ,".W.......WW."
+        ,".........W.."
+        ,"..W......W.."
+        ,".W.W.....WW."
+        ,"W.W.W.....W."
+        ,".W.W......W."
+        ,"..W.......W."
+        ]
 
-search :: [Char] -> State VisitState Counter
-search [] = do
- (_,counter) <- get
- return counter
-search (x:xs) = do
- ((p,visited),counter) <- get
- case x of
-  '.' -> put ((p+1,p:visited),counter)
-  'W' -> 
+value (x,y) = (field !! x) !! y
 
- search xs
+inField (x,y)
+ = 0<=x && x<n && 0<=y && y<m
 
---既に探索済みの座標は調べる必要がないので、4点のみ調べれば良い
-nearPos :: Pos -> [Pos]
-nearPos p = filter (<n*m) [p + 1,p+m-1,p+m,p+m+1]
+dfs :: Pos -> IORef [Pos] -> IO ()
+dfs p visitedRef = do
+ modifyIORef visitedRef (p:) 
+ visited <- readIORef visitedRef
+ forM_ (near4pos p) $ \p' ->
+  when (value p' == 'W' && all (/=p') visited) $
+   do modifyIORef visitedRef (p':)
+      dfs p' visitedRef
 
-start :: VisitState
-start = ((0,0),0)
+near4pos (x,y) = filter inField [          {-(x,y)-}( x ,y+1),
+                                  (x+1,y-1),(x+1,y),(x+1,y+1)]
 
-main :: IO()
-main = evalState (search [0..m*n]) start
+solve :: (Counter,Visited) -> Pos -> IO (Counter,Visited)
+solve (c,visitedRef) p = do
+ visited <- readIORef visitedRef
+ --未訪問且つ、池である場合
+ if value p == 'W' && all (/=p) visited
+  then do
+        dfs p visitedRef
+        return (c+1,visitedRef)
+  else do
+        visitedRef' <- newIORef $ p:visited
+        return ( c ,visitedRef')
+
+main = do
+ visitedRef <- newIORef []
+ (c,_) <- foldlM solve (0,visitedRef)
+                 [(x,y) | x <- [0..n-1] , y <- [0..m-1]]
+ print c

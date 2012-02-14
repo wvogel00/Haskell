@@ -31,16 +31,15 @@ dfs p visitedRef = do
  forM_ (near4pos p) $ \p' ->
   when (value p' == 'W') $ dfs p' visitedRef
 
-near4pos (x,y) = filter inField [          {-(x,y)-}( x ,y+1),
-                                  (x+1,y-1),(x+1,y),(x+1,y+1)]
+near4pos (x,y) = filter inField [    {-(x,y)-}( x ,y+1),
+                            (x+1,y-1),(x+1,y),(x+1,y+1)]
 
 solve (c,visitedRef) p = do
  visited <- readIORef visitedRef
  if value p == 'W' && all (/=p) visited --未訪問且つ池
   then dfs p visitedRef
        >> return (c+1,visitedRef)
-  else newIORef (p:visited)
-        >>= \vRef -> return (c,vRef)
+  else return (c,visitedRef)
 
 main = do
  visitedRef <- newIORef []

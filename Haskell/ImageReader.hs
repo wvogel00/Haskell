@@ -5,8 +5,9 @@ import Data.Word
 import Data.Binary
 import Data.Binary.Get
 import Data.ByteString.Lazy as L (readFile)
-import Control.Monad (foldM)
 import Control.Applicative
+import Control.Monad
+import Interface(Pos,width,height)
 
 type RGBA = Color4 GLfloat
 type RGB  = Color3 GLfloat
@@ -53,7 +54,7 @@ readBmpInfoHeader = do
 toGLfloat :: Word8 -> GLfloat
 toGLfloat = (/255).read.show
 
---1画素を読む
+--画素を読む
 readColor3 :: Int -> Get [Color3 GLfloat]
 readColor3 0 = return []
 readColor3 n = do
@@ -61,26 +62,45 @@ readColor3 n = do
  g <- getWord8
  r <- getWord8
  let x = [Color3 (toGLfloat r) (toGLfloat g) (toGLfloat b)]
- xs <- ((x++)<$>readColor3 (n-24))
+ xs <- ((x++)<$>readColor3 (n-3))
  return xs
 
 --読み込んだ画素情報のリストを返す
-readBmp :: String -> IO [RGB]
+readBmp :: String -> IO (Int,Int,[RGB])
 readBmp filePath = do
   binaryFile <- L.readFile filePath
   return $ runGet bmpImageList binaryFile
 
---ヘッダ情報の確認用
+--ヘッダ情報の確認
 showInfo = do
  f <- readBmpFileHeader
  i <- readBmpInfoHeader
  return (f,i)
 
 --読み込んだビットマップリストを返す
-bmpImageList :: Get [RGB]
+bmpImageList :: Get (Int,Int,[RGB])
 bmpImageList = do
  f <- readBmpFileHeader
  i <- readBmpInfoHeader
  xs <- readColor3 (read.show $ biSizeImage i)
- return (f,i)
- return xs
+ return (toInt (biWidth i) , toInt (biHeight i),xs)
+ where
+  toInt = read.show
+-------------------------------------------------------
+-----------------------画像描画部----------------------
+
+--画像を描画する
+showImage :: Pos -> (Int,Int,[RGB]) -> IO()
+showImage (x,y) (w,h,xs) = do
+ let poses = map f [(x,y)|x<-[1..w],y<-[1..h]]
+ forM_ (zip poses xs) imageDot
+ where
+  f :: (Int,Int) -> (GLfloat,GLfloat)
+  f (a,b) = (fromIntegral a/width+x,fromIntegral b/height+y)
+
+--一画素を描画
+imageDot :: (Pos,Color3 GLfloat) ->IO()
+imageDot ((x,y),c) =
+ preservingMatrix $ do
+  color c
+  renderPrimitive Points $ vertex $ Vertex2 x y

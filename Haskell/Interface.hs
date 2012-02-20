@@ -25,5 +25,6 @@ type Pos = (GLfloat,GLfloat)	--座標
 datafile :: FilePath
 datafile = "d.txt"
 
+width,height :: Float
 width = 800.0
 height= 600.0

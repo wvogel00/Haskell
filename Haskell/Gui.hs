@@ -27,17 +27,5 @@ myDisp = do
   color (Color3 0.9 1.0 0.3 :: Color3 GLfloat)
   renderPrimitive Points $ mapM_ vertex
             $ map (\x->Vertex2 x x) [(-1.0),(-0.99)..1.0 :: GLfloat]
+ readBmp "test.bmp" >>= showImage (0,0)
  swapBuffers
-
---画像を描画する関数
-showImage :: Pos -> FilePath -> IO ()
-showImage (x,y) file = do
- (w,h,bitmap) <- readBmp file
- return ()
-
---画像の一画素ずつをドットで表示
-imageDot :: (Pos,Color3 GLfloat) -> IO()
-imageDot ((x,y),c) = do
- preservingMatrix $ do
-  color c
-  renderPrimitive Points $ vertex $ Vertex2 x y

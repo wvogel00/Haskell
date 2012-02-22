@@ -86,17 +86,18 @@ bmpImageList = do
  return (toInt (biWidth i) , toInt (biHeight i),xs)
  where
   toInt = read.show
+
 -------------------------------------------------------
 -----------------------画像描画部----------------------
 
 --画像を描画する
 showImage :: Pos -> (Int,Int,[RGB]) -> IO()
 showImage (x,y) (w,h,xs) = do
- let poses = map f [(x,y)|x<-[1..w],y<-[1..h]]
+ let poses = map f [(y,x)|y<-[h,h-1..1],x<-[1..w]]
  forM_ (zip poses xs) imageDot
  where
   f :: (Int,Int) -> (GLfloat,GLfloat)
-  f (a,b) = (fromIntegral a/width+x,fromIntegral b/height+y)
+  f (y',x') = (fromIntegral x'*2/width+x,fromIntegral y'*2/height+y-1)
 
 --一画素を描画
 imageDot :: (Pos,Color3 GLfloat) ->IO()

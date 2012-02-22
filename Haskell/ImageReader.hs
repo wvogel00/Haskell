@@ -25,6 +25,9 @@ data BmpInfoHeader = BmpInfoHeader {
   biSizeImage :: Word32	--純粋な過疎情報サイズ
 } deriving Show
 
+-------------------------------------------------------
+-------------------------------------------------------
+
 -- .bmpファイルのファイルヘッダを読み込む
 readBmpFileHeader :: Get BmpFileHeader
 readBmpFileHeader = do
@@ -50,32 +53,28 @@ readBmpInfoHeader = do
              biBitCount = c , biSizeImage = size
            }
 
---バイナリデータから読み出した生データをGLfloatに変換
-toGLfloat :: Word8 -> GLfloat
-toGLfloat = (/255).read.show
+-------------------------------------------------------
+-------------------------------------------------------
 
 --画素を読む
 readColor3 :: Int -> Get [Color3 GLfloat]
-readColor3 0 = return []
-readColor3 n = do
- b <- getWord8
- g <- getWord8
- r <- getWord8
- let x = [Color3 (toGLfloat r) (toGLfloat g) (toGLfloat b)]
- xs <- ((x++)<$>readColor3 (n-3))
- return xs
+readColor3 n
+ | n <= 0 = return []
+ | otherwise = do
+    b <- getWord8
+    g <- getWord8
+    r <- getWord8
+    let x = Color3 (toGLfloat r) (toGLfloat g) (toGLfloat b)
+    xs <- (x:)<$>readColor3 (n-3)
+    return xs
+      where
+       toGLfloat :: Word8 -> GLfloat
+       toGLfloat = (/255).fromIntegral
 
 --読み込んだ画素情報のリストを返す
 readBmp :: String -> IO (Int,Int,[RGB])
-readBmp filePath = do
-  binaryFile <- L.readFile filePath
-  return $ runGet bmpImageList binaryFile
-
---ヘッダ情報の確認
-showInfo = do
- f <- readBmpFileHeader
- i <- readBmpInfoHeader
- return (f,i)
+readBmp filePath =
+  L.readFile filePath >>= return.runGet bmpImageList
 
 --読み込んだビットマップリストを返す
 bmpImageList :: Get (Int,Int,[RGB])
@@ -83,9 +82,15 @@ bmpImageList = do
  f <- readBmpFileHeader
  i <- readBmpInfoHeader
  xs <- readColor3 (read.show $ biSizeImage i)
- return (toInt (biWidth i) , toInt (biHeight i),xs)
- where
-  toInt = read.show
+ return (fromIntegral (biWidth  i) ,
+         fromIntegral (biHeight i) , xs)
+
+-------------------------------------------------------
+--ヘッダ情報の確認
+showInfo = do
+ f <- readBmpFileHeader
+ i <- readBmpInfoHeader
+ return (f,i)
 
 -------------------------------------------------------
 -----------------------画像描画部----------------------
@@ -95,13 +100,15 @@ showImage :: Pos -> (Int,Int,[RGB]) -> IO()
 showImage (x,y) (w,h,xs) = do
  let poses = map f [(y,x)|y<-[h,h-1..1],x<-[1..w]]
  forM_ (zip poses xs) imageDot
+ --forM_ (zip (map f $concat $ map (g w) [h,h-1..1]) xs) imageDot
  where
   f :: (Int,Int) -> (GLfloat,GLfloat)
-  f (y',x') = (fromIntegral x'*2/width+x,fromIntegral y'*2/height+y-1)
+  f (y',x') = (fromIntegral x'*2/width+x ,
+               fromIntegral y'*2/height+y-1)
+  g w y = zip [1..w] $ repeat y
 
 --一画素を描画
 imageDot :: (Pos,Color3 GLfloat) ->IO()
-imageDot ((x,y),c) =
- preservingMatrix $ do
+imageDot ((x,y),c) = do
   color c
   renderPrimitive Points $ vertex $ Vertex2 x y

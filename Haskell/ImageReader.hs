@@ -9,9 +9,6 @@ import Control.Applicative
 import Control.Monad
 import Interface(Pos,width,height)
 
-type RGBA = Color4 GLfloat
-type RGB  = Color3 GLfloat
-
 data BmpFileHeader = BmpFileHeader {
   bfType :: Word16,	--ファイルタイプ(0x424d)
   bfSize :: Word32	--ファイルサイズ
@@ -67,8 +64,7 @@ readColor3 n
        toGLfloat :: Word8 -> GLfloat
        toGLfloat = (/255).fromIntegral
 
---読み込んだビットマップリストを返す
-bmpImageList :: Get (Int,Int,[RGB])
+bmpImageList :: Get (Int,Int,[Color3 GLfloat])
 bmpImageList = do
  f <- readBmpFileHeader
  i <- readBmpInfoHeader
@@ -77,19 +73,13 @@ bmpImageList = do
          fromIntegral (biHeight i) , xs)
 
 --画像の画素情報のリストとサイズを返す
-readBmp :: String -> IO (Int,Int,[RGB])
+readBmp :: String -> IO (Int,Int,[Color3 GLfloat])
 readBmp filePath =
   L.readFile filePath >>= return.runGet bmpImageList
--------------------------------------------------------
---ヘッダ情報の確認
-showInfo = do
- f <- readBmpFileHeader
- i <- readBmpInfoHeader
- return (f,i)
 
 -----------------------画像描画部----------------------
 --画像を描画する
-showImage :: Pos -> (Int,Int,[RGB]) -> IO()
+showImage :: Pos -> (Int,Int,[Color3 GLfloat]) -> IO()
 showImage (x,y) (w,h,xs) = do
  let poses = map f [(x,y)|y<-[h,h-1..1],x<-[1..w]]
  forM_ (zip poses xs) imageDot
@@ -103,3 +93,10 @@ imageDot :: (Pos,Color3 GLfloat) ->IO()
 imageDot ((x,y),c) = do
   color c
   renderPrimitive Points $ vertex $ Vertex2 x y
+
+-------------------------------------------------------
+--ヘッダ情報の確認
+showInfo = do
+ f <- readBmpFileHeader
+ i <- readBmpInfoHeader
+ return (f,i)

@@ -26,8 +26,6 @@ data BmpInfoHeader = BmpInfoHeader {
 } deriving Show
 
 -------------------------------------------------------
--------------------------------------------------------
-
 -- .bmpファイルのファイルヘッダを読み込む
 readBmpFileHeader :: Get BmpFileHeader
 readBmpFileHeader = do
@@ -54,8 +52,6 @@ readBmpInfoHeader = do
            }
 
 -------------------------------------------------------
--------------------------------------------------------
-
 --画素を読む
 readColor3 :: Int -> Get [Color3 GLfloat]
 readColor3 n
@@ -71,20 +67,19 @@ readColor3 n
        toGLfloat :: Word8 -> GLfloat
        toGLfloat = (/255).fromIntegral
 
---読み込んだ画素情報のリストを返す
-readBmp :: String -> IO (Int,Int,[RGB])
-readBmp filePath =
-  L.readFile filePath >>= return.runGet bmpImageList
-
 --読み込んだビットマップリストを返す
 bmpImageList :: Get (Int,Int,[RGB])
 bmpImageList = do
  f <- readBmpFileHeader
  i <- readBmpInfoHeader
- xs <- readColor3 (read.show $ biSizeImage i)
+ xs <- readColor3 (fromIntegral $ biSizeImage i)
  return (fromIntegral (biWidth  i) ,
          fromIntegral (biHeight i) , xs)
 
+--画像の画素情報のリストとサイズを返す
+readBmp :: String -> IO (Int,Int,[RGB])
+readBmp filePath =
+  L.readFile filePath >>= return.runGet bmpImageList
 -------------------------------------------------------
 --ヘッダ情報の確認
 showInfo = do
@@ -92,20 +87,16 @@ showInfo = do
  i <- readBmpInfoHeader
  return (f,i)
 
--------------------------------------------------------
 -----------------------画像描画部----------------------
-
 --画像を描画する
 showImage :: Pos -> (Int,Int,[RGB]) -> IO()
 showImage (x,y) (w,h,xs) = do
- let poses = map f [(y,x)|y<-[h,h-1..1],x<-[1..w]]
+ let poses = map f [(x,y)|y<-[h,h-1..1],x<-[1..w]]
  forM_ (zip poses xs) imageDot
- --forM_ (zip (map f $concat $ map (g w) [h,h-1..1]) xs) imageDot
  where
   f :: (Int,Int) -> (GLfloat,GLfloat)
-  f (y',x') = (fromIntegral x'*2/width+x ,
+  f (x',y') = (fromIntegral x'*2/width+x ,
                fromIntegral y'*2/height+y-1)
-  g w y = zip [1..w] $ repeat y
 
 --一画素を描画
 imageDot :: (Pos,Color3 GLfloat) ->IO()

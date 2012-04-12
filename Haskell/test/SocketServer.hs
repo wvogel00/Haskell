@@ -5,28 +5,19 @@ import System.Random
 import Control.Applicative
 import Control.Monad (when)
 import Data.IORef
-
+import Interface
 
 type Cards = IORef [Int]
 type Point = IORef Int
 type GameInfo = (Point,Point , Cards,Cards)
 
-maxN :: Int
-maxN = 9
-
-card :: IO Int
-card = randomIO >>= return.(+1).(`mod` maxN).abs
-
-takeCard 0 = return []
-takeCard n = do
- num <- card
- (num:)<$>takeCard (n-1)
+data Winner = You | I | Stalemate deriving Eq
 
 main :: IO ()
 main = withSocketsDo $ do
 
- myCards    <- newIORef =<< takeCard 5
- yourCards  <- newIORef =<< takeCard 5
+ myCards <- newIORef [1..5]
+ yourCards <- newIORef [1..5]
  myPoint    <- newIORef 0
  yourPoint  <- newIORef 0
  let gameInfo = (myPoint,yourPoint,myCards,yourCards)
@@ -39,8 +30,11 @@ main = withSocketsDo $ do
 server :: GameInfo -> IO ()
 server info = do
     sock <- listenOn (PortNumber 8001)
-    repeats (receive sock info) info
-    sClose sock
+    --repeats (receive sock info) info
+    bool <- receive sock info
+    if bool
+     then sClose sock
+     else putStrLn "error" >> sClose sock
 
 repeats :: IO Bool -> GameInfo -> IO () 
 repeats x info =
@@ -52,8 +46,8 @@ receive sock info = do
     hSetBuffering h LineBuffering
 
     msg <- hGetLine h
-    if msg == "gameStart"
-     then hPutStrLn h "start!!" >> game h info
+    if msg == gameStart
+     then hPutStrLn h startStatement >> game h info
      else putStrLn ("See You!"++msg) >> return True
 
 game :: Handle -> GameInfo -> IO Bool
@@ -64,7 +58,7 @@ game h info@(mP,yP,mC,yC) = do
  putStrLn $ "PC " ++ show mC'
  putStrLn $ "PERSON " ++ show yC'
 
- hPutStrLn h $ "chose number :-> "++ show yC'
+ hPutStrLn h $ "choose number :-> "++ show yC'
 
  input <- hGetLine h
 
@@ -73,6 +67,8 @@ game h info@(mP,yP,mC,yC) = do
      rand <- randomIO
      let myNumber = mC' !! (rand `mod` length mC')
 
+     hPutStrLn h $ show myNumber
+
      putStrLn $ "PC chose " ++ show myNumber
      putStrLn $ "PERSON chose" ++ input
 
@@ -80,14 +76,33 @@ game h info@(mP,yP,mC,yC) = do
      upDate myNumber mC
      addPoint mP yP (read input - myNumber)
 
-     showGameState h mP yP 
+     showGameState h mP yP
    else
      hPutStrLn h "*error! such number doesn't exist !"
 
  yC'' <- readIORef yC
- if null yC''
-  then game h info
-  else return True
+ bool <- judge h mP yP yC''
+ if bool
+  then return True
+  else game h info
+
+judge :: Handle -> Point -> Point -> [Int]-> IO Bool
+judge h mP yP cards= do
+ if not $ null cards
+  then hPutStrLn h continue >> return False
+  else do hPutStrLn h end
+          mP' <- readIORef mP
+          yP' <- readIORef yP
+          case winnerIs (yP' - mP') of
+            You -> hPutStrLn h "*******You Win !!!*******"
+            I   -> hPutStrLn h "-------You Lose!!!-------"
+            Stalemate -> hPutStrLn h "+++++STALEMATE+++++"
+          return True
+  where
+   winnerIs p
+    | p > 0  = You
+    | p < 0  = I
+    | p == 0 = Stalemate
 
 upDate n cards =
  readIORef cards >>=

@@ -2,16 +2,17 @@ module SocketClient where
 
 import Network
 import System.IO 
+import Interface
 
 start = withSocketsDo $ do
  hSetBuffering stdout NoBuffering
  h <- connectTo "127.0.0.1" (PortNumber 8001)
  hSetBuffering h LineBuffering
 
- hPutStrLn h "gameStart"
+ hPutStrLn h gameStart
  statement <- hGetLine h
  print statement
- if statement == "start!!"
+ if statement == startStatement
   then game h
   else return ()
  hClose h
@@ -26,11 +27,14 @@ game h = do
  where
   seeCards h = hGetLine h >>= putStrLn
   continuableOrNot h = do   --得点又はエラー文章を取得
-    str <- hGetLine h
-    putStrLn str
-    if head str == '*'
-      then hPutStrLn h ""
-      else game h
+    hGetLine h >>= putStrLn.(++) "PC card >" -- PCの選んだカードを見る
+    hGetLine h >>= putStrLn -- ゲームの状況を見る
+
+    state <- hGetLine h
+
+    case state of
+     continue -> game h
+     end      -> hGetLine h >>= putStrLn
 
 chose number = withSocketsDo $ do
  hSetBuffering stdout NoBuffering

@@ -19,36 +19,17 @@ start = withSocketsDo $ do
 
 game :: Handle -> IO()
 game h = do
- seeCards h
- putStrLn ">?"
+ seeCards h >> putStrLn ">?"
  getLine >>= hPutStrLn h
 
- continuableOrNot h
+ continueOrNot h     -- 得点又はエラー文章を取得
  where
   seeCards h = hGetLine h >>= putStrLn
-  continuableOrNot h = do   --得点又はエラー文章を取得
+  continueOrNot h = do
     hGetLine h >>= putStrLn.(++) "PC card >" -- PCの選んだカードを見る
-    hGetLine h >>= putStrLn -- ゲームの状況を見る
-
+    hGetLine h >>= putStrLn                  -- ゲームの状況を見る
     state <- hGetLine h
 
-    case state of
-     continue -> game h
-     end      -> hGetLine h >>= putStrLn
-
-chose number = withSocketsDo $ do
- hSetBuffering stdout NoBuffering
- h <- connectTo "127.0.0.1" (PortNumber 8001)
- hSetBuffering h LineBuffering
-
- hPrint h number
- hGetLine h >>= print
- hClose h
-
-sendMessage msg = withSocketsDo $ do 
-        hSetBuffering stdout NoBuffering 
-        h <- connectTo "127.0.0.1" (PortNumber 8001)
-        hSetBuffering h LineBuffering
-        hPutStrLn h msg
-        hGetLine h >>= print
-        hClose h
+    if state == end
+     then hGetLine h >>= putStrLn
+     else game h

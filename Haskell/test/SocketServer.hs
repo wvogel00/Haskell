@@ -1,9 +1,7 @@
 import Network
 import System.IO 
-
 import System.Random
-import Control.Applicative
-import Control.Monad (when)
+import Control.Applicative ( (<$>) )
 import Data.IORef
 import Interface
 

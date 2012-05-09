@@ -1,7 +1,6 @@
 import Graphics.UI.GLUT
 import Interface
-
-data GameState = Title | Play | GameOver
+import DrawFunc
 
 main = do
  getArgsAndInitialize
@@ -19,6 +18,6 @@ chariGame = do
  clear [ColorBuffer]
  loadIdentity
 
- drawChari 20 10
-
+ drawChari 400 100
+ drawGround $ makeGround 23
  swapBuffers

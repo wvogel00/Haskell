@@ -7,6 +7,8 @@ import Data.List
 piList = [0,0.01..2*pi]
 
 toVertex (x,y) = Vertex2 x y
+toVector3 :: (GLfloat,GLfloat) -> Vertex3 Float
+toVector3 (x,y) = Vertex3 (x/width*2-1) (y/height*2-1) 0
 toGLPos (Vertex2 x y) = Vertex2 (x/width*2-1) (y/height*2-1)
 
 drawChari x y = preservingMatrix $ do
@@ -52,3 +54,12 @@ makeGrad seed = case isGrad seed of
    | otherwise = Interface.Cliff(mod seed 80)
    where
     grad = mod seed 67
+
+putText (x,y) str = preservingMatrix $ do
+ clearColor $= Color4 1.0 1.0 1.0 0.0
+ lineWidth $= 3.0
+ w <- stringWidth Roman str
+ translate (pos w :: Vector3 Float)
+ scale 0.001 0.0008 (1.0 :: Double)
+ renderString Roman str where
+  pos w = Vector3 (x/width*2-1-0.5*fromIntegral w) (y/height*2-1) 0

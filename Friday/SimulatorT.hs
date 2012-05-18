@@ -11,18 +11,24 @@ simulate ft info@(s,p,wwt,b,n) (r1:r2:randoms) = if now s >= ft
 --イベント種類によってsystemを更新
 update rs (sy,p,wwt,b,n) nowState = case nowState of
     CallOfLoss -> (systemC, newPacket (now sy) sy rs,wwt,b+1,n+1) where
-	systemC = (capacity sy,parameter sy,queue sy,
-			nextTime sy $ newPacket (now sy) sy rs)
+	systemC = (capacity sy,parameter sy,queue',
+		nextTime queue' $ newPacket (now sy) sy rs)
+	queue' = queue sy
 
     EnQueue    -> (systemE, newPacket (now sy) sy rs, wwt,b,n+1) where
-	systemE = (capacity sy,parameter sy,queue sy++[p],
-			nextTime sy $ newPacket (now sy) sy rs)
+	systemE = (capacity sy,parameter sy,queue',
+			nextTime queue' $ newPacket (now sy) sy rs)
+	queue' = queue sy ++ [p]
 
     Process    -> (systemP, p, wwt+stayTime, b, n) where
-	systemP = (capacity sy,parameter sy,tail$queue sy,nextTime sy p)
+	systemP = (capacity sy,parameter sy,queue',nextTime queue' p)
 	stayTime = now sy - arrive (head $ queue sy)
+	queue' = updateQueue (now sy) $ tail $ queue sy
 --パケットを生成する
 newPacket time sy (r1,r2) = mkPacket time (parameter sy) r1 r2
 --次回イベント時刻を求める
-nextTime sy = min (escapeTime sy).arrive
-escapeTime sy = if queue sy/=[] then escape.head $queue sy else 10^10
+nextTime q = min escapeTime.arrive where
+	escapeTime = if q /=[] then escape $ head q else 10^10
+--Queueの先頭パケットの離脱時間を更新
+updateQueue _ [] = []
+updateQueue time ((at,st,et,bool):ps) = (at,st,time+st,bool):ps

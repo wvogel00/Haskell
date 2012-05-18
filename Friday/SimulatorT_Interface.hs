@@ -49,7 +49,7 @@ input = do
 		 = ((read l,read m),read capa,read st, read ft)
 
 output measuredTime (system,p,wwt,b,n) = do
-        print $ system
+        putStrLn $ "(" ++ show b ++ "::" ++ show n ++ ")"
         putStrLn $ "call of loss == " ++ show callofloss
         putStrLn $ "average of packets = " ++ show (wwt/measuredTime)
         putStrLn $ "average of waiting time = " ++ show avgWaiting where

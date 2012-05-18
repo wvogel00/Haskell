@@ -20,10 +20,20 @@ data System = System {
 
 seedList seed = randomRs (0.0,1.0) (mkStdGen seed) -- 乱数リスト
 
+mkPacketD s r1 r2 = Packet {
+  arrive        = now s + arrive' r1 s,
+  service       = 2.0,
+  escape        = now s + arrive' r1 s + service' r2 s,
+  firstPriority = isPriority r1
+}
+
 mkPacketM s r1 r2 = Packet {
- arrive = now s+arrive', service = service',
- escape = now s+arrive'+service',firstPriority = isPriority
- } where
-  isPriority = if r1 < 1/60 then True else False
-  arrive'  = -log (1-r1)/(fst $ param s)
-  service' = -log (1-r2)/(snd $ param s)
+  arrive        = now s+arrive' r1 s,
+  service       = service' r2 s,
+  escape        = now s + arrive' r1 s + service' r2 s,
+  firstPriority = isPriority r1
+ }
+
+isPriority r  = if r < 1/60 then True else False
+arrive'  r s  = -log (1-r)/(fst $ param s)
+service' r s  = -log (1-r)/(snd $ param s)

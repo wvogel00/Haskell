@@ -1,4 +1,4 @@
-import S_I
+import S_Interface
 import Data.Time.Clock
 
 input :: IO ((Double,Double),Int,Time,Time,Int)
@@ -14,12 +14,11 @@ input = do
  putStrLn "finish :->"
  ft <- getLine
  t <- getCurrentTime
- print $ utctDayTime t
  let seed  = floor.read.init.show $ utctDayTime t
  return ((read l,read m), read c, read st, read ft, seed)
 
 output measuredTime (system,p,wwt) = do
- print $ system
+ --print $ system
  putStrLn $ "call of loss == " ++ show callofloss
  putStrLn $ "average of packets in system = " ++ show (wwt/measuredTime)
  putStrLn $ "average of waiting time = " ++ show (wwt/n)
@@ -32,7 +31,7 @@ main = do
  let (r1:r2:randomList) = seedList seed
      initSystem = mkInit d
      fstPacket = mkPacketM initSystem r1 r2
- output (start-finish) . (simulator finish) (initSystem,fstPacket,0)
+ output (finish-start) . (simulator finish) (initSystem,fstPacket,0)
     $randomList where
   mkInit (lm,c,st,_,_) = System {
    param = lm, capa = c, counter = (0,0), queue = [], now = st

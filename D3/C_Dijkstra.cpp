@@ -7,7 +7,7 @@
 #define Num 10
 #define MAX 10000
 #define N 10000
-#define NP 10000
+#define NP 100
 using namespace std;
 
 typedef struct link{
@@ -27,6 +27,7 @@ class Dijkstra{
     typedef struct memory{
         int start,end;
         int prev[Num];
+        bool flag;
     }Memory;
 
     Link maxRoute[Num][Num];
@@ -58,7 +59,7 @@ void Initialize(){  //経路選択に必要な変数群を初期化
 
 public:
 void Simulate(Link route[Num][Num]){  //シミュレータを走らせる関数
-    int start,end,k,blocks = 0;
+    int start,end,k,np,blocks;
     bool success;
     cout << "1::dijkstra" << endl << "2::shortestMax" << endl;
     cin >> k;
@@ -70,33 +71,41 @@ void Simulate(Link route[Num][Num]){  //シミュレータを走らせる関数
         }
     }
 
+    np = blocks = 0;
     for(int counter = 0 ; counter < N ; counter++){
         start = rand()%Num;
         end = rand()%Num;
-        Initialize();  //毎経路選択前に、初期化を行う
         if(k == 1)
             success = ShortestRoute(start,end,simRoute);
         else if(k == 2)
             success = MaxRoute(start,end,simRoute);
 
         if(counter >= NP) // np回前の通信に用いた経路の容量回復を行う
-            RecoveryRoute(start,end,counter%NP,route);
+            RecoveryRoute(np,route);
         
         if(success){
            UpdateSimRoute(start,end);
-           RememberRoute(start,end,counter%NP);
+           RememberRoute(start,end,np);
+           np = (1+np)%NP;
         }
-        if(!success) blocks++;
+        if(!success){
+            blocks++;
+            memoryRoute[np].flag = false;
+        }
     }
 
     cout << "b=" << blocks << endl << "呼損率 = " << (double)blocks/N << endl;
 }
 private:
-void RecoveryRoute(int start,int end,int np,Link route[Num][Num]){
+void RecoveryRoute(int np , Link route[Num][Num]){
+    if(!memoryRoute[np].flag) return;
+
     for(int tmp = memoryRoute[np].end ; tmp != memoryRoute[np].start ; tmp = memoryRoute[np].prev[tmp]){
-        if(simRoute[memoryRoute[np].prev[tmp]][tmp].capacity < route[memoryRoute[np].prev[tmp]][tmp].capacity){
-            simRoute[memoryRoute[np].prev[tmp]][tmp].capacity++;
-            simRoute[memoryRoute[np].prev[tmp]][tmp].len = route[prev[tmp]][tmp].len;
+        int tmp2 = memoryRoute[np].prev[tmp];
+        if(simRoute[tmp2][tmp].capacity < route[tmp2][tmp].capacity){
+            simRoute[tmp2][tmp].capacity++;
+            simRoute[tmp][tmp2].capacity++;
+            simRoute[tmp2][tmp].len = simRoute[tmp][tmp2].len = route[tmp2][tmp].len;
         }
     }
 }
@@ -104,12 +113,14 @@ void RecoveryRoute(int start,int end,int np,Link route[Num][Num]){
 private:
 void UpdateSimRoute(int start,int end){
     for(int tmp = end ; tmp != start ; tmp = prev[tmp]){ //更新
-        if(simRoute[prev[tmp]][tmp].capacity > 0)
+        if(simRoute[prev[tmp]][tmp].capacity > 0){
             simRoute[prev[tmp]][tmp].capacity--;
-        if(simRoute[prev[tmp]][tmp].capacity == 0)
-            simRoute[prev[tmp]][tmp].len = MAX;
+            simRoute[tmp][prev[tmp]].capacity--;
+        }
+        if(simRoute[prev[tmp]][tmp].capacity == 0){
+            simRoute[prev[tmp]][tmp].len = simRoute[tmp][prev[tmp]].len = MAX;
+        }
     }
-    
 }
 
 private:
@@ -119,12 +130,14 @@ void RememberRoute(int start,int end,int np){
     }
     memoryRoute[np].start = start;
     memoryRoute[np].end = end;
-
+    memoryRoute[np].flag = true;
 }
+
 public://渡されたノード表に対して、最短最大路を求める
 bool MaxRoute(int start,int end , Link route[Num][Num]){
     int max = 0;
     //配列の初期化
+    Initialize();
     for(i = 0 ; i < Num ; i++){
         for(j = 0 ; j < Num ; j++){
             maxRoute[i][j].len = maxRoute[i][j].capacity = MAX;
@@ -147,7 +160,6 @@ bool MaxRoute(int start,int end , Link route[Num][Num]){
         for(i = 0 ; i < Num ; i++) chk[i] = false;
         if(isLinked(start,end)) break;
     }
-
     if(max == 0) return false; //失敗
 
     max++; 
@@ -159,7 +171,6 @@ bool MaxRoute(int start,int end , Link route[Num][Num]){
                 }
         }
     }
-    Initialize();
     return ShortestRoute(start,end,maxRoute);
 }
 
@@ -181,11 +192,10 @@ bool isLinked(int start,int end){
 
 public://渡された接続表に対して、dijkstraで最短距離を求める
 bool ShortestRoute(int start,int end , Link route[Num][Num]){
+    Initialize();
     dist[start] = 0;
-
     while(1){
         int v = -1;
-
         for(i = 0 ; i < Num ; i++)
             if(!chk[i] && (v == -1 || dist[i] < dist[v]))
                 v = i;
@@ -193,7 +203,6 @@ bool ShortestRoute(int start,int end , Link route[Num][Num]){
         if(v == -1) break;
 
         chk[v] = true;
-
         for(int i = 0 ; i < Num ; i++){
             if(dist[i] > dist[v] + route[v][i].len){
                 dist[i] = dist[v]+route[v][i].len;
@@ -219,7 +228,6 @@ bool ShortestRoute(int start,int end , Link route[Num][Num]){
         path.distance = dist[end];
     }
     path.distance = dist[end];
-    //Show();
     return true;
 }
 
@@ -240,8 +248,8 @@ int main(){
  int len,capacity;
  int i,j;
  FILE* fp;
-// fp = fopen("./test_topology.txt","r");
- fp = fopen("./topology2.txt","r");
+ fp = fopen("./test_topology.txt","r");
+ //fp = fopen("./topology2.txt","r");
 
  for(i = 0 ; i < Num ; i++){
    for(j = 0 ; j < Num ; j++){
@@ -260,10 +268,10 @@ int main(){
  cout << "end node?(0~" << Num-1 << ") > ";
  cin >> end;
 
- //dijkstra.ShortestRoute(start,end,links);
-// dijkstra.Simulate(links);
+ dijkstra.Simulate(links);
+/// dijkstra.ShortestRoute(start,end,links);
  //cout << "最大路" << endl;
- dijkstra.MaxRoute(start,end,links);
+ //dijkstra.MaxRoute(start,end,links);
  dijkstra.Show();
  return 0;
 }

@@ -26,6 +26,7 @@ dfs p visitedRef = do
  forM_ (near4pos p) $ \p' ->
   when (value p' == 'W') $ dfs p' visitedRef
 
+
 near4pos (x,y) = filter inField [    {-(x,y)-}( x ,y+1),
                             (x+1,y-1),(x+1,y),(x+1,y+1)]
 

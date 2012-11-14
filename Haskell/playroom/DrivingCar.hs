@@ -30,12 +30,14 @@ run = do
 	putStr.show $ snd carstate
 
 driveFlat (Accelerator,car) = if car ^.fuelL > 0
-	then  velocityL ^= 10 $ posL ^= 10 $ fuelL ^= -5 $ car
-	else  velocityL ^= -3 $ posL^= 5 $ car
-driveFlat (Brake,car) = velocityL ^= -10 $ posL ^= 5 $ car
+	then  updateCar 10 10 (-5)car
+	else  updateCar (-3) 5 0 car
+driveFlat (Brake,car) = updateCar (-10) 5 (-5) car
 
-driveUp car = velocityL ^= -5 $ posL ^= 5 $ fuelL ^= -10 $ car
-driveDown car = velocityL ^= 10 $ posL ^= 15 $ fuelL ^= -1 $ car
+driveUp = updateCar (-5) 5 (-10)
+driveDown = updateCar 10 15 (-1)
+
+updateCar v p f = (velocityL^=v).(posL^=p).(fuelL^=f)
 
 road :: [String]
 road = ["flat","up","up","down","flat","flat","down","flat","flat","up","up","flat"]

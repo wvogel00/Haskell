@@ -1,4 +1,4 @@
-module DFT2 where
+module DFT where
 
 import Control.Applicative
 

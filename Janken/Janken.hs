@@ -1,19 +1,22 @@
 data Hand = G | C | H
-data Player = Human | Computer
-data Perceptron = Perceptron{ws :: [[Double]]}
+data Perceptron = Perceptron{ws :: [[Double]], next :: Hand}
 
 input 'g' = G
 input 'c' = C
 input 'h' = H
 
-G win C = Human
-C win G = Computer
-G win H = Human
-H win G = Computer
-H win C = Human
-C win H = Computer
+G win C = -1
+C win G =  1
+G win H = -1
+H win G =  1
+H win C = -1
+C win H =  1
+_ win _ =  0
 
 initPerceptron = Perceptron{ws = replicate 3 $ replacate 3 0.0}
+
+initialize :: Perceptron -> IO Perceptron
+initialize
 
 w .*. a = sum.map (uncurry (*)) $ zip w a
 k .* a = map (*k) a
@@ -23,11 +26,12 @@ predict w x y = w .*. (phi x y)
 
 update w x y = if predict != t then w + t .* phi
 
-main = do
+main = initialize initPerceptron >>= janken
+
+janken :: Perceptron -> IO ()
+janken p = do
 	putStrLn "janken! g,c,h..."
-	let hand = perceptron
+	let hand = next perceptron
 	c <- getChar
 	let score = (input c) `win` hand
-	case score of
-		Computer -> main
-		Human -> update perceptron >> main
+	janken $ update perceptron score
